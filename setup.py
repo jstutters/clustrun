@@ -2,7 +2,7 @@ import codecs
 import os.path
 from setuptools import find_packages, setup
 
-project = 'snakerunner'
+project = 'clustrun'
 here = os.path.abspath(os.path.dirname(__file__))
 
 with codecs.open(os.path.join(here, 'README.md'), encoding='utf-8') as f:
@@ -19,7 +19,7 @@ setup(
     author_email='j.stutters@ucl.ac.uk',
     description='A tool for distributing tasks across a range of servers using SSH',
     long_description=long_description,
-    url='https://hydra.nmr.ion.ucl.ac.uk/jstutters/snakerunner',
+    url='https://github.com/jstutters/clustrun',
     install_requires=[
         'click',
         'fabric',
@@ -27,13 +27,12 @@ setup(
     setup_requires=[],
     tests_require=[],
     entry_points={
-        'console_scripts': ['snakerunner=snakerunner.main:run']
+        'console_scripts': ['clustrun=clustrun.main:run']
     },
     license='MIT',
     classifiers=[
         'Development Status :: 4 - Beta',
         'Intended Audience :: Science/Research',
         'License :: OSI Approved :: MIT License',
-        'Topic :: System :: Logging'
     ]
 )
