@@ -1,4 +1,4 @@
-# snakerunner
+# clustrun
 
 ## Example command template
 
@@ -24,5 +24,5 @@ de/01/002
 ## Example invocation
 
 ```
-snakerunner --hosts-file hosts --cmd-file cmd_tplt --setup-cmd-file setup --tasks-file tasks
+clustrun --hosts-file hosts --cmd-file cmd_tplt --setup-cmd-file setup --tasks-file tasks
 ```
