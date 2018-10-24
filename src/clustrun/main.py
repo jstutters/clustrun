@@ -1,3 +1,5 @@
+from queue import Empty
+import signal
 import click
 from fabric import Config as ConnectionConfig
 from .hosts import read_hosts_file
@@ -32,10 +34,26 @@ def run(tasks, hosts_file, hosts, cmd_tplt, cmd_file, setup_cmd, setup_cmd_file,
     if setup_cmd:
         setup_workers(server_list, connection_config, setup_cmd)
 
+    global q
     q = make_queue(tasks)
 
+    signal.signal(signal.SIGINT, int_handler)
+
     workers = launch_workers(server_list, q, connection_config, cmd_tplt)
+
     wait_for_workers(q, workers)
+
+
+
+def int_handler(signum, frame):
+    """Rapidly empty the queue so we're left with only running tasks."""
+    global q
+    while not q.empty():
+        try:
+            q.get(timeout=5)
+            q.task_done()
+        except Empty:
+            break
 
 
 if __name__ == "__main__":

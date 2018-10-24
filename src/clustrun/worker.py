@@ -21,6 +21,8 @@ def worker(q, hostname, config, cmd_template):
         cmd = cmd_template.format(t)
         try:
             c.sudo(cmd, hide='both')
+        except KeyboardInterrupt:
+            break
         except Exception:
             duration = datetime.now() - start_time
             err_msg = '{0} Error during {1} on {2} after {3}'.format(
