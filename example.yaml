@@ -1,0 +1,16 @@
+hosts:
+    - server01
+    - server02
+
+cmd_tplt: "docker run --rm -v /foo/bar/{0} image snakemake"
+
+setup_cmd: |
+    docker pull host/owner/image_name
+    docker rename host/owner/image_name
+
+tasks:
+    - uk/01/002
+    - uk/02/002
+    - uk/03/002
+    - uk/04/002
+    - uk/05/002
