@@ -9,17 +9,22 @@ from .worker import launch_workers, setup_workers, wait_for_workers
 
 @click.command()
 @click.argument('tasks', nargs=-1)
-@click.option('--hosts-file', 'hosts_file', default='hosts', help='Path to hosts file', type=click.File())
 @click.option('--hosts', help='Comma-separated list of hosts', type=str)
+@click.option('--hosts-file', 'hosts_file', help='Path to hosts file', type=click.File())
 @click.option('--cmd', 'cmd_tplt', help='Command template', type=str)
 @click.option('--cmd-file', 'cmd_file', help='Path to command template file', type=click.File())
 @click.option('--setup-cmd', 'setup_cmd', help='Setup commmand', type=str)
 @click.option('--setup-cmd-file', 'setup_cmd_file', help='Path to setup command file', type=click.File())
 @click.option('--tasks-file', 'tasks_file', help='Path to file listing tasks', type=click.File())
 @click.option('--sudo-pass', 'sudo_pass', prompt=True, hide_input=True, confirmation_prompt=False)
-def run(tasks, hosts_file, hosts, cmd_tplt, cmd_file, setup_cmd, setup_cmd_file, tasks_file, sudo_pass):
+def run(tasks, hosts, hosts_file, cmd_tplt, cmd_file, setup_cmd, setup_cmd_file, tasks_file, sudo_pass):
     """Run a list of tasks on using a pool of servers."""
-    server_list = read_hosts_file(hosts_file)
+
+    if hosts_file:
+        server_list = read_hosts_file(hosts_file)
+    else:
+        server_list = hosts.split(",")
+
     connection_config = ConnectionConfig(overrides={'sudo': {'password': sudo_pass}})
 
     if tasks_file:
