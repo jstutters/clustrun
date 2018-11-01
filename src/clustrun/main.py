@@ -1,53 +1,75 @@
-from queue import Empty
+import math
+import os
 import signal
+from queue import Empty
+from multiprocessing import Queue
+
 import click
-from fabric import Config as ConnectionConfig
+
+from .config import Config
 from .hosts import read_hosts_file
-from .tasks import read_cmd_file, read_tasks_file, make_queue
+from .tasks import make_queue, read_cmd_file, read_tasks_file
+from .unified import read_unified
 from .worker import launch_workers, setup_workers, wait_for_workers
 
 
 @click.command()
-@click.argument('tasks', nargs=-1)
-@click.option('--hosts', help='Comma-separated list of hosts', type=str)
-@click.option('--hosts-file', 'hosts_file', help='Path to hosts file', type=click.File())
-@click.option('--cmd', 'cmd_tplt', help='Command template', type=str)
-@click.option('--cmd-file', 'cmd_file', help='Path to command template file', type=click.File())
-@click.option('--setup-cmd', 'setup_cmd', help='Setup commmand', type=str)
-@click.option('--setup-cmd-file', 'setup_cmd_file', help='Path to setup command file', type=click.File())
-@click.option('--tasks-file', 'tasks_file', help='Path to file listing tasks', type=click.File())
-@click.option('--sudo-pass', 'sudo_pass', prompt=True, hide_input=True, confirmation_prompt=False)
-def run(tasks, hosts, hosts_file, cmd_tplt, cmd_file, setup_cmd, setup_cmd_file, tasks_file, sudo_pass):
+@click.option('-h', '--hosts', 'hosts_file',
+              help='Path to hosts file', type=click.File())
+@click.option('-s', '--setup', 'setup_cmd_file',
+              help='Path to setup command file', type=click.File())
+@click.option('-c', '--cmd', 'cmd_file',
+              help='Path to command template file', type=click.File())
+@click.option('-t', '--tasks', 'tasks_file',
+              help='Path to file listing tasks', type=click.File())
+@click.option('--ssh-user', 'ssh_user',
+              help='SSH username', type=str, default=lambda: os.environ.get('USER', ''))
+@click.option('--sudo', 'use_sudo', flag_value='yes', help='Execute tasks with sudo')
+@click.option('--no-sudo', 'use_sudo', flag_value='no', help='Execute tasks with sudo')
+@click.argument('config_file', type=click.File())
+def run(hosts_file, setup_cmd_file, cmd_file, tasks_file, ssh_user, use_sudo, config_file):
     """Run a list of tasks on using a pool of servers."""
+    config = Config()
+    if config_file:
+        config = read_unified(config_file)
 
     if hosts_file:
-        server_list = read_hosts_file(hosts_file)
-    else:
-        server_list = hosts.split(",")
-
-    connection_config = ConnectionConfig(overrides={'sudo': {'password': sudo_pass}})
-
-    if tasks_file:
-        tasks = read_tasks_file(tasks_file)
-
-    if cmd_file:
-        cmd_tplt = read_cmd_file(cmd_file)
-
+        config.hosts = read_hosts_file(hosts_file)
     if setup_cmd_file:
-        setup_cmd = read_cmd_file(setup_cmd_file)
+        config.setup_cmd = read_cmd_file(setup_cmd_file)
+    if cmd_file:
+        config.cmd_tplt = read_cmd_file(cmd_file)
+    if tasks_file:
+        config.tasks = read_tasks_file(tasks_file)
+    if ssh_user:
+        config.ssh_user = ssh_user
+    if use_sudo is not None:
+        config.sudo = use_sudo == 'yes'
 
-    if setup_cmd:
-        setup_workers(server_list, connection_config, setup_cmd)
+    if config.sudo:
+        config.sudo_pass = click.prompt('Sudo password', hide_input=True)
+
+    if config.setup_cmd:
+        setup_workers(config)
 
     global q
-    q = make_queue(tasks)
+    q = make_queue(config.tasks)
+    results = Queue()
 
     signal.signal(signal.SIGINT, int_handler)
 
-    workers = launch_workers(server_list, q, connection_config, cmd_tplt)
+    workers = launch_workers(config, q, results)
 
-    wait_for_workers(q, workers)
+    wait_for_workers(workers, q)
 
+    results_list = []
+    while True:
+        try:
+            r = results.get(block=False)
+        except Empty:
+            break
+        results_list.append(r)
+    print(sum([r.duration.total_seconds() for r in results_list]) / len(results_list))
 
 
 def int_handler(signum, frame):

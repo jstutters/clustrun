@@ -1,14 +1,20 @@
+from fabric import Config as ConnectionConfig
+
+
 class Config():
     def __init__(self):
         self._hosts = []
         self._setup_cmd = ""
         self._cmd_tplt = ""
+        self._sudo = False
         self._tasks = []
+        self._ssh_user = ""
+        self._sudo_pass = ""
 
     @property
     def hosts(self):
         return self._hosts
-    
+
     @hosts.setter
     def hosts(self, v):
         if not isinstance(v, (list, tuple)):
@@ -18,7 +24,7 @@ class Config():
     @property
     def setup_cmd(self):
         return self._setup_cmd
-    
+
     @setup_cmd.setter
     def setup_cmd(self, v):
         if not isinstance(v, str):
@@ -28,7 +34,7 @@ class Config():
     @property
     def cmd_tplt(self):
         return self._cmd_tplt
-    
+
     @cmd_tplt.setter
     def cmd_tplt(self, v):
         if not isinstance(v, str):
@@ -38,9 +44,49 @@ class Config():
     @property
     def tasks(self):
         return self._tasks
-    
+
     @tasks.setter
     def tasks(self, v):
         if not isinstance(v, (list, tuple)):
             raise ValueError
         self._tasks = v
+
+    @property
+    def sudo(self):
+        return self._sudo
+
+    @sudo.setter
+    def sudo(self, v):
+        if not isinstance(v, bool):
+            raise ValueError
+        self._sudo = v
+
+    @property
+    def sudo_pass(self):
+        return self._sudo_pass
+
+    @sudo_pass.setter
+    def sudo_pass(self, v):
+        if not isinstance(v, str):
+            raise ValueError
+        self._sudo_pass = v
+
+    @property
+    def ssh_user(self):
+        return self._ssh_user
+
+    @ssh_user.setter
+    def ssh_user(self, v):
+        if not isinstance(v, str):
+            raise ValueError
+        self._ssh_user = v
+
+    @property
+    def connection(self):
+        overrides = {
+            'user': self._ssh_user,
+            'sudo': {
+                'password': self._sudo_pass
+            }
+        }
+        return ConnectionConfig(overrides=overrides)

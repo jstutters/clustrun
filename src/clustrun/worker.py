@@ -1,26 +1,32 @@
 from datetime import datetime
 from multiprocessing import Process
 from queue import Empty
+
 import click
 from fabric import Connection
+
+from clustrun.result import Result
 
 
 def log_date():
     return datetime.now().strftime('[%Y-%m-%d %H:%M:%S]')
 
 
-def worker(q, hostname, config, cmd_template):
+def worker(q, rq, hostname, config):
     while True:
-        c = Connection(hostname, config=config)
+        c = Connection(hostname, config=config.connection)
         try:
             t = q.get(timeout=5)
         except Empty:
             break
         start_time = datetime.now()
         print(log_date(), 'Running', t, 'on', hostname)
-        cmd = cmd_template.format(t)
+        cmd = config.cmd_tplt.format(t)
         try:
-            c.sudo(cmd, hide='both')
+            if config.sudo:
+                r = c.sudo(cmd, hide='both')
+            else:
+                r = c.run(cmd, hide='both')
         except KeyboardInterrupt:
             break
         except Exception:
@@ -36,28 +42,41 @@ def worker(q, hostname, config, cmd_template):
             )
             click.secho(finish_msg, fg='green')
         q.task_done()
+        result = Result(
+            hostname=hostname,
+            task=t,
+            stdout=r.stdout,
+            stderr=r.stderr,
+            exit_code=r.exited,
+            duration=duration
+        )
+        rq.put(result)
         c.close()
 
 
-def setup_workers(server_list, connection_config, cmd):
-    for h in server_list:
-        print('Configuring ', h, '... ', end='', sep='', flush=True)
-        c = Connection(h, config=connection_config)
-        for l in cmd.split('\n'):
-            c.sudo(l, hide='both')
+def setup_workers(config):
+    for h in config.hosts:
+        print('Configuring ', h.hostname, '... ', end='', sep='', flush=True)
+        c = Connection(h.hostname, config=config.connection)
+        for l in config.setup_cmd.split('\n'):
+            if config.sudo:
+                c.sudo(l, hide='both')
+            else:
+                c.run(l, hide='both')
         print('done')
 
 
-def launch_workers(server_list, q, connection_config, cmd_template):
+def launch_workers(config, q, rq):
     workers = []
-    for h in server_list:
-        p = Process(target=worker, args=(q, h, connection_config, cmd_template))
-        p.start()
-        workers.append(p)
+    for h in config.hosts:
+        for _ in range(h.n_jobs):
+            p = Process(target=worker, args=(q, rq, h.hostname, config))
+            p.start()
+            workers.append(p)
     return workers
 
 
-def wait_for_workers(q, processes):
+def wait_for_workers(processes, q):
     q.join()
     for p in processes:
         p.join()
