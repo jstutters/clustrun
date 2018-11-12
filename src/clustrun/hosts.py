@@ -9,6 +9,12 @@ class Host():
     def __repr__(self):
         return 'Host({0!r}, n_jobs={1})'.format(self.hostname, self.n_jobs)
 
+    def to_dict(self):
+        return {
+            'hostname': self.hostname,
+            'n_jobs': self.n_jobs
+        }
+
 
 def read_hosts_file(hosts_file):
     exp = re.compile(r'^(?P<hostname>\S*){1}\s*(n=(?P<n_jobs>[0-9]+))?')

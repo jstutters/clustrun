@@ -90,3 +90,13 @@ class Config():
             }
         }
         return ConnectionConfig(overrides=overrides)
+
+    def to_dict(self):
+        return {
+            'hosts': [h.to_dict() for h in self._hosts],
+            'setup_cmd': self._setup_cmd,
+            'cmd_tplt': self._cmd_tplt,
+            'sudo': self._sudo,
+            'tasks': self._tasks,
+            'ssh_user': self._ssh_user
+        }

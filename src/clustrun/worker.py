@@ -16,12 +16,13 @@ def worker(q, rq, hostname, config):
     while True:
         c = Connection(hostname, config=config.connection)
         try:
-            t = q.get(timeout=5)
+            t = q.get(block=False)
         except Empty:
             break
         start_time = datetime.now()
         print(log_date(), 'Running', t, 'on', hostname)
         cmd = config.cmd_tplt.format(t)
+        r = None
         try:
             if config.sudo:
                 r = c.sudo(cmd, hide='both')
@@ -42,15 +43,16 @@ def worker(q, rq, hostname, config):
             )
             click.secho(finish_msg, fg='green')
         q.task_done()
-        result = Result(
-            hostname=hostname,
-            task=t,
-            stdout=r.stdout,
-            stderr=r.stderr,
-            exit_code=r.exited,
-            duration=duration
-        )
-        rq.put(result)
+        if r is not None:
+            result = Result(
+                hostname=hostname,
+                task=t,
+                stdout=r.stdout,
+                stderr=r.stderr,
+                exit_code=r.exited,
+                duration=duration
+            )
+            rq.put(result)
         c.close()
 
 
@@ -76,7 +78,6 @@ def launch_workers(config, q, rq):
     return workers
 
 
-def wait_for_workers(processes, q):
-    q.join()
+def wait_for_workers(processes):
     for p in processes:
         p.join()

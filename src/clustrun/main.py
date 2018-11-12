@@ -1,4 +1,5 @@
-import math
+from datetime import datetime
+import json
 import os
 import signal
 from queue import Empty
@@ -8,6 +9,7 @@ import click
 
 from .config import Config
 from .hosts import read_hosts_file
+from .report import make_report
 from .tasks import make_queue, read_cmd_file, read_tasks_file
 from .unified import read_unified
 from .worker import launch_workers, setup_workers, wait_for_workers
@@ -26,8 +28,10 @@ from .worker import launch_workers, setup_workers, wait_for_workers
               help='SSH username', type=str, default=lambda: os.environ.get('USER', ''))
 @click.option('--sudo', 'use_sudo', flag_value='yes', help='Execute tasks with sudo')
 @click.option('--no-sudo', 'use_sudo', flag_value='no', help='Execute tasks with sudo')
-@click.argument('config_file', type=click.File())
-def run(hosts_file, setup_cmd_file, cmd_file, tasks_file, ssh_user, use_sudo, config_file):
+@click.option('-f', '--config', 'config_file', type=click.File())
+@click.option('-r', '--report', 'report_file', type=click.File('w'))
+def run(hosts_file, setup_cmd_file, cmd_file, tasks_file, ssh_user, use_sudo,
+        config_file, report_file):
     """Run a list of tasks on using a pool of servers."""
     config = Config()
     if config_file:
@@ -49,6 +53,8 @@ def run(hosts_file, setup_cmd_file, cmd_file, tasks_file, ssh_user, use_sudo, co
     if config.sudo:
         config.sudo_pass = click.prompt('Sudo password', hide_input=True)
 
+    start_time = datetime.now()
+
     if config.setup_cmd:
         setup_workers(config)
 
@@ -60,16 +66,11 @@ def run(hosts_file, setup_cmd_file, cmd_file, tasks_file, ssh_user, use_sudo, co
 
     workers = launch_workers(config, q, results)
 
-    wait_for_workers(workers, q)
+    wait_for_workers(workers)
 
-    results_list = []
-    while True:
-        try:
-            r = results.get(block=False)
-        except Empty:
-            break
-        results_list.append(r)
-    print(sum([r.duration.total_seconds() for r in results_list]) / len(results_list))
+    report = make_report(config, start_time, results)
+    if report_file:
+        json.dump(report, report_file)
 
 
 def int_handler(signum, frame):
