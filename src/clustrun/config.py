@@ -10,6 +10,7 @@ class Config():
         self._tasks = []
         self._ssh_user = ""
         self._sudo_pass = ""
+        self._ssh_pass = ""
 
     @property
     def hosts(self):
@@ -72,6 +73,16 @@ class Config():
         self._sudo_pass = v
 
     @property
+    def ssh_pass(self):
+        return self._ssh_pass
+
+    @ssh_pass.setter
+    def ssh_pass(self, v):
+        if not isinstance(v, str):
+            raise ValueError
+        self._ssh_pass = v
+
+    @property
     def ssh_user(self):
         return self._ssh_user
 
@@ -89,6 +100,10 @@ class Config():
                 'password': self._sudo_pass
             }
         }
+        if self.ssh_pass:
+            overrides['connect_kwargs'] = {
+                'password': self._ssh_pass
+            }
         return ConnectionConfig(overrides=overrides)
 
     def to_dict(self):
