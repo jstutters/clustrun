@@ -24,5 +24,5 @@ de/01/002
 ## Example invocation
 
 ```
-clustrun --hosts-file hosts --cmd-file cmd_tplt --setup-cmd-file setup --tasks-file tasks
+clustrun -h hosts -c cmd_tplt -s setup -t tasks
 ```
