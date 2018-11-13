@@ -11,7 +11,7 @@ with codecs.open(os.path.join(here, 'README.md'), encoding='utf-8') as f:
 
 setup(
     name=project,
-    version='0.1.0',
+    version='0.1.1',
     packages=find_packages(where="src"),
     package_dir={"": "src"},
     include_package_data=True,
