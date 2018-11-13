@@ -32,34 +32,36 @@ def worker(q, rq, hostname, config, port=22):
             break
         try:
             if config.sudo:
-                r = c.sudo(cmd, hide='both')
+                r = c.sudo(cmd, hide='both', warn=True)
             else:
-                r = c.run(cmd, hide='both')
-        except Exception:
-            duration = datetime.now() - start_time
-            err_msg = '{0} Error during {1} on {2} after {3}'.format(
-                log_date(), t, hostname, duration
-            )
-            click.secho(err_msg, fg='red')
+                r = c.run(cmd, hide='both', warn=True)
+        except Exception as e:
+            click.secho("Exception running command: " + str(e), fg='red')
+            break
         else:
+            q.task_done()
             duration = datetime.now() - start_time
-            finish_msg = '{0} Finished {1} on {2} after {3}'.format(
-                log_date(), t, hostname, duration
+            if r.exited == 0:
+                finish_msg = '{0} Finished {1} on {2} after {3}'.format(
+                    log_date(), t, hostname, duration
+                )
+                click.secho(finish_msg, fg='green')
+            else:
+                err_msg = '{0} Error during {1} on {2} after {3}'.format(
+                    log_date(), t, hostname, duration
+                )
+                click.secho(err_msg, fg='red')
+            result = Result(
+                hostname=hostname,
+                task=t,
+                stdout=r.stdout,
+                stderr=r.stderr,
+                exit_code=r.exited,
+                duration=duration
             )
-            click.secho(finish_msg, fg='green')
+            rq.put(result)
         finally:
             c.close()
-            q.task_done()
-            if r is not None:
-                result = Result(
-                    hostname=hostname,
-                    task=t,
-                    stdout=r.stdout,
-                    stderr=r.stderr,
-                    exit_code=r.exited,
-                    duration=duration
-                )
-                rq.put(result)
 
 
 def setup_workers(config):
@@ -78,7 +80,11 @@ def launch_workers(config, q, rq):
     workers = []
     for h in config.hosts:
         for _ in range(h.n_jobs):
-            p = Process(target=worker, args=(q, rq, h.hostname, config, h.port), name="clustrun.worker")
+            p = Process(
+                target=worker,
+                args=(q, rq, h.hostname, config, h.port),
+                name="clustrun.worker"
+            )
             p.start()
             workers.append(p)
     return workers
