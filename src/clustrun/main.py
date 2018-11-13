@@ -1,7 +1,6 @@
 import json
 import os
 import signal
-import threading
 from datetime import datetime
 from multiprocessing import Queue, current_process
 from queue import Empty
