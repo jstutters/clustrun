@@ -95,7 +95,7 @@ def int_handler(signum, frame):
             click.secho("Cancelling all queued tasks...")
             while not q.empty():
                 try:
-                    q.get(timeout=5)
+                    q.get(timeout=1)
                     q.task_done()
                 except Empty:
                     break
@@ -105,6 +105,7 @@ def int_handler(signum, frame):
             click.secho("Terminating workers...")
             for w in workers:
                 w.terminate()
+                w.join()
 
 
 if __name__ == "__main__":
