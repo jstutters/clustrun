@@ -1,6 +1,7 @@
 import json
 import os
 import signal
+import sys
 from datetime import datetime
 from multiprocessing import Queue, current_process
 from queue import Empty
@@ -83,6 +84,8 @@ def run(hosts_file, setup_cmd_file, cmd_file, tasks_file, ssh_user, use_sudo,
     report = make_report(config, start_time, results)
     if report_file:
         json.dump(report, report_file)
+    sys.stdout.flush()
+    sys.stderr.flush()
     print_report(report)
 
 
