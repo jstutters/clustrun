@@ -91,11 +91,7 @@ def launch_workers(config, q, rq):
 
 
 def wait_for_workers(processes):
-    while True:
+    while processes:
         for p in processes:
-            p.join(1)
-        some_alive = False
-        for p in processes:
-            some_alive = p.is_alive()
-        if not some_alive:
-            break
+            p.join(timeout=5)
+        processes = [p for p in processes if p.is_alive()]
