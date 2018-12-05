@@ -14,3 +14,10 @@ def make_queue(tasks):
     for t in tasks:
         q.put(t)
     return q
+
+
+def enqueue_sentinels(q, hosts):
+    # Enqueue one sentinel for each worker
+    for h in hosts:
+        for _ in range(h.n_jobs):
+            q.put(None)

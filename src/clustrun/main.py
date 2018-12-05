@@ -11,7 +11,7 @@ import click
 from .config import Config
 from .hosts import read_hosts_file
 from .report import make_report, print_report
-from .tasks import make_queue, read_cmd_file, read_tasks_file
+from .tasks import make_queue, read_cmd_file, read_tasks_file, enqueue_sentinels
 from .unified import read_unified
 from .worker import launch_workers, setup_workers, wait_for_workers
 
@@ -73,6 +73,7 @@ def run(hosts_file, setup_cmd_file, cmd_file, tasks_file, ssh_user, use_sudo,
     global q
     global workers
     q = make_queue(config.tasks)
+    enqueue_sentinels(q, config.hosts)
     results = Queue()
 
     signal.signal(signal.SIGINT, int_handler)

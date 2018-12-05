@@ -1,6 +1,5 @@
 from datetime import datetime
 from multiprocessing import Process
-from queue import Empty
 
 import click
 from fabric import Connection
@@ -14,9 +13,10 @@ def log_date():
 
 def worker(q, rq, hostname, config, port=22):
     while True:
-        try:
-            t = q.get(block=False)
-        except Empty:
+        t = q.get(block=False)
+        if t is None:
+            # None is the sentinel to indicate all queued items have been
+            # processed
             break
         start_time = datetime.now()
         print(log_date(), 'Running', t, 'on', hostname)
@@ -39,7 +39,6 @@ def worker(q, rq, hostname, config, port=22):
             click.secho("Exception running command: " + str(e), fg='red')
             break
         else:
-            q.task_done()
             duration = datetime.now() - start_time
             if r.exited == 0:
                 finish_msg = '{0} Finished {1} on {2} after {3}'.format(
@@ -61,7 +60,9 @@ def worker(q, rq, hostname, config, port=22):
             )
             rq.put(result)
         finally:
+            q.task_done()
             c.close()
+    click.echo("Worker on {0} is done".format(hostname))
 
 
 def setup_workers(config):
@@ -91,7 +92,5 @@ def launch_workers(config, q, rq):
 
 
 def wait_for_workers(processes):
-    while processes:
-        for p in processes:
-            p.join(timeout=5)
-        processes = [p for p in processes if p.is_alive()]
+    for p in processes:
+        p.join()
