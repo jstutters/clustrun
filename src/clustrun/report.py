@@ -5,17 +5,17 @@ from queue import Empty
 def make_report(config, start_time, results):
     results = _queue_to_list(results)
     return {
-        'config': config.to_dict(),
-        'results': [r.to_dict() for r in results],
-        'summary': {
-            'start_time': str(start_time),
-            'total_duration': str(_calculate_mean_duration(results)),
-            'mean_duration': str(_calculate_mean_duration(results)),
-            'finish_time': str(datetime.now()),
-            'num_tasks': len(results),
-            'num_successes': _calculate_num_successes(results),
-            'num_failures': _calculate_num_failures(results),
-        }
+        "config": config.to_dict(),
+        "results": [r.to_dict() for r in results],
+        "summary": {
+            "start_time": str(start_time),
+            "total_duration": str(_calculate_mean_duration(results)),
+            "mean_duration": str(_calculate_mean_duration(results)),
+            "finish_time": str(datetime.now()),
+            "num_tasks": len(results),
+            "num_successes": _calculate_num_successes(results),
+            "num_failures": _calculate_num_failures(results),
+        },
     }
 
 
@@ -34,15 +34,17 @@ def print_report(report):
     Failures: {6}
     ========================================
     """
-    print(msg.format(
-        report['summary']['start_time'],
-        report['summary']['finish_time'],
-        report['summary']['total_duration'],
-        report['summary']['num_tasks'],
-        report['summary']['mean_duration'],
-        report['summary']['num_successes'],
-        report['summary']['num_failures'],
-    ))
+    print(
+        msg.format(
+            report["summary"]["start_time"],
+            report["summary"]["finish_time"],
+            report["summary"]["total_duration"],
+            report["summary"]["num_tasks"],
+            report["summary"]["mean_duration"],
+            report["summary"]["num_successes"],
+            report["summary"]["num_failures"],
+        )
+    )
 
 
 def _queue_to_list(queued_items):
@@ -61,7 +63,9 @@ def _calculate_total_duration(results):
 
 def _calculate_mean_duration(results):
     if len(results) > 0:
-        return timedelta(seconds=_calculate_total_duration(results).total_seconds() / len(results))
+        return timedelta(
+            seconds=_calculate_total_duration(results).total_seconds() / len(results)
+        )
     else:
         return timedelta(0)
 

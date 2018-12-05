@@ -1,7 +1,7 @@
 from fabric import Config as ConnectionConfig
 
 
-class Config():
+class Config:
     def __init__(self):
         self._hosts = []
         self._setup_cmd = ""
@@ -94,24 +94,17 @@ class Config():
 
     @property
     def connection(self):
-        overrides = {
-            'user': self._ssh_user,
-            'sudo': {
-                'password': self._sudo_pass
-            }
-        }
+        overrides = {"user": self._ssh_user, "sudo": {"password": self._sudo_pass}}
         if self.ssh_pass:
-            overrides['connect_kwargs'] = {
-                'password': self._ssh_pass
-            }
+            overrides["connect_kwargs"] = {"password": self._ssh_pass}
         return ConnectionConfig(overrides=overrides)
 
     def to_dict(self):
         return {
-            'hosts': [h.to_dict() for h in self._hosts],
-            'setup_cmd': self._setup_cmd,
-            'cmd_tplt': self._cmd_tplt,
-            'sudo': self._sudo,
-            'tasks': self._tasks,
-            'ssh_user': self._ssh_user
+            "hosts": [h.to_dict() for h in self._hosts],
+            "setup_cmd": self._setup_cmd,
+            "cmd_tplt": self._cmd_tplt,
+            "sudo": self._sudo,
+            "tasks": self._tasks,
+            "ssh_user": self._ssh_user,
         }

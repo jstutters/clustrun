@@ -24,30 +24,57 @@ def print_version(ctx, param, value):
     try:
         click.echo(get_distribution(__name__).version)
     except DistributionNotFound:
-        click.echo('N/A')
+        click.echo("N/A")
     ctx.exit()
 
 
 @click.command()
-@click.option('-h', '--hosts', 'hosts_file',
-              help='Path to hosts file', type=click.File())
-@click.option('-s', '--setup', 'setup_cmd_file',
-              help='Path to setup command file', type=click.File())
-@click.option('-c', '--cmd', 'cmd_file',
-              help='Path to command template file', type=click.File())
-@click.option('-t', '--tasks', 'tasks_file',
-              help='Path to file listing tasks', type=click.File())
-@click.option('--ssh-user', 'ssh_user',
-              help='SSH username', type=str, default=lambda: os.environ.get('USER', ''))
-@click.option('--sudo', 'use_sudo', flag_value='yes', help='Execute tasks with sudo')
-@click.option('--no-sudo', 'use_sudo', flag_value='no', help='Execute tasks without sudo')
-@click.option('--ask-ssh-pass', 'ask_ssh_pass', flag_value='yes', help='Ask for an SSH password')
-@click.option('-f', '--config', 'config_file', type=click.File())
-@click.option('-r', '--report', 'report_file', type=click.File('w'))
-@click.option('--version',
-              is_flag=True, callback=print_version, expose_value=False, is_eager=True)
-def run(hosts_file, setup_cmd_file, cmd_file, tasks_file, ssh_user, use_sudo,
-        ask_ssh_pass, config_file, report_file):
+@click.option(
+    "-h", "--hosts", "hosts_file", help="Path to hosts file", type=click.File()
+)
+@click.option(
+    "-s",
+    "--setup",
+    "setup_cmd_file",
+    help="Path to setup command file",
+    type=click.File(),
+)
+@click.option(
+    "-c", "--cmd", "cmd_file", help="Path to command template file", type=click.File()
+)
+@click.option(
+    "-t", "--tasks", "tasks_file", help="Path to file listing tasks", type=click.File()
+)
+@click.option(
+    "--ssh-user",
+    "ssh_user",
+    help="SSH username",
+    type=str,
+    default=lambda: os.environ.get("USER", ""),
+)
+@click.option("--sudo", "use_sudo", flag_value="yes", help="Execute tasks with sudo")
+@click.option(
+    "--no-sudo", "use_sudo", flag_value="no", help="Execute tasks without sudo"
+)
+@click.option(
+    "--ask-ssh-pass", "ask_ssh_pass", flag_value="yes", help="Ask for an SSH password"
+)
+@click.option("-f", "--config", "config_file", type=click.File())
+@click.option("-r", "--report", "report_file", type=click.File("w"))
+@click.option(
+    "--version", is_flag=True, callback=print_version, expose_value=False, is_eager=True
+)
+def run(
+    hosts_file,
+    setup_cmd_file,
+    cmd_file,
+    tasks_file,
+    ssh_user,
+    use_sudo,
+    ask_ssh_pass,
+    config_file,
+    report_file,
+):
     """Run a list of tasks on using a pool of servers."""
     config = Config()
     if config_file:
@@ -64,17 +91,17 @@ def run(hosts_file, setup_cmd_file, cmd_file, tasks_file, ssh_user, use_sudo,
     if ssh_user:
         config.ssh_user = ssh_user
     if use_sudo is not None:
-        config.sudo = use_sudo == 'yes'
+        config.sudo = use_sudo == "yes"
     if ask_ssh_pass is not None:
         config.ask_ssh_pass = True
     else:
         config.ask_ssh_pass = False
 
     if config.ask_ssh_pass:
-        config.ssh_pass = click.prompt('SSH password', hide_input=True)
+        config.ssh_pass = click.prompt("SSH password", hide_input=True)
 
     if config.sudo:
-        config.sudo_pass = click.prompt('Sudo password', hide_input=True)
+        config.sudo_pass = click.prompt("Sudo password", hide_input=True)
 
     start_time = datetime.now()
 

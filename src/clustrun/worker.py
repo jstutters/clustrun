@@ -8,7 +8,7 @@ from clustrun.result import Result
 
 
 def log_date():
-    return datetime.now().strftime('[%Y-%m-%d %H:%M:%S]')
+    return datetime.now().strftime("[%Y-%m-%d %H:%M:%S]")
 
 
 def worker(q, rq, hostname, config, port=22):
@@ -19,44 +19,42 @@ def worker(q, rq, hostname, config, port=22):
             # processed
             break
         start_time = datetime.now()
-        print(log_date(), 'Running', t, 'on', hostname)
+        print(log_date(), "Running", t, "on", hostname)
         cmd = config.cmd_tplt.format(t)
         r = None
         try:
             c = Connection(hostname, port=port, config=config.connection)
         except Exception:
-            err_msg = '{0} Connection failed to {1}'.format(
-                log_date(), hostname
-            )
-            click.secho(err_msg, fg='red')
+            err_msg = "{0} Connection failed to {1}".format(log_date(), hostname)
+            click.secho(err_msg, fg="red")
             break
         try:
             if config.sudo:
-                r = c.sudo(cmd, hide='both', warn=True)
+                r = c.sudo(cmd, hide="both", warn=True)
             else:
-                r = c.run(cmd, hide='both', warn=True)
+                r = c.run(cmd, hide="both", warn=True)
         except Exception as e:
-            click.secho("Exception running command: " + str(e), fg='red')
+            click.secho("Exception running command: " + str(e), fg="red")
             break
         else:
             duration = datetime.now() - start_time
             if r.exited == 0:
-                finish_msg = '{0} Finished {1} on {2} after {3}'.format(
+                finish_msg = "{0} Finished {1} on {2} after {3}".format(
                     log_date(), t, hostname, duration
                 )
-                click.secho(finish_msg, fg='green')
+                click.secho(finish_msg, fg="green")
             else:
-                err_msg = '{0} Error during {1} on {2} after {3}'.format(
+                err_msg = "{0} Error during {1} on {2} after {3}".format(
                     log_date(), t, hostname, duration
                 )
-                click.secho(err_msg, fg='red')
+                click.secho(err_msg, fg="red")
             result = Result(
                 hostname=hostname,
                 task=t,
                 stdout=r.stdout,
                 stderr=r.stderr,
                 exit_code=r.exited,
-                duration=duration
+                duration=duration,
             )
             rq.put(result)
         finally:
@@ -67,14 +65,14 @@ def worker(q, rq, hostname, config, port=22):
 
 def setup_workers(config):
     for h in config.hosts:
-        print('Configuring ', h.hostname, '... ', end='', sep='', flush=True)
+        print("Configuring ", h.hostname, "... ", end="", sep="", flush=True)
         c = Connection(h.hostname, config=config.connection)
-        for l in config.setup_cmd.split('\n'):
+        for l in config.setup_cmd.split("\n"):
             if config.sudo:
-                c.sudo(l, hide='both')
+                c.sudo(l, hide="both")
             else:
-                c.run(l, hide='both')
-        print('done')
+                c.run(l, hide="both")
+        print("done")
 
 
 def launch_workers(config, q, rq):
@@ -84,7 +82,7 @@ def launch_workers(config, q, rq):
             p = Process(
                 target=worker,
                 args=(q, rq, h.hostname, config, h.port),
-                name="clustrun.worker"
+                name="clustrun.worker",
             )
             p.start()
             workers.append(p)

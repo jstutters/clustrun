@@ -6,7 +6,7 @@ def read_tasks_file(tasks_file):
 
 
 def read_cmd_file(cmd_file):
-    return '\n'.join([l.strip() for l in cmd_file.readlines()])
+    return "\n".join([l.strip() for l in cmd_file.readlines()])
 
 
 def make_queue(tasks):
