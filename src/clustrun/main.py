@@ -15,6 +15,18 @@ from .tasks import make_queue, read_cmd_file, read_tasks_file, enqueue_sentinels
 from .unified import read_unified
 from .worker import launch_workers, setup_workers, wait_for_workers
 
+from pkg_resources import get_distribution, DistributionNotFound
+
+
+def print_version(ctx, param, value):
+    if not value or ctx.resilient_parsing:
+        return
+    try:
+        click.echo(get_distribution(__name__).version)
+    except DistributionNotFound:
+        click.echo('N/A')
+    ctx.exit()
+
 
 @click.command()
 @click.option('-h', '--hosts', 'hosts_file',
@@ -32,6 +44,8 @@ from .worker import launch_workers, setup_workers, wait_for_workers
 @click.option('--ask-ssh-pass', 'ask_ssh_pass', flag_value='yes', help='Ask for an SSH password')
 @click.option('-f', '--config', 'config_file', type=click.File())
 @click.option('-r', '--report', 'report_file', type=click.File('w'))
+@click.option('--version',
+              is_flag=True, callback=print_version, expose_value=False, is_eager=True)
 def run(hosts_file, setup_cmd_file, cmd_file, tasks_file, ssh_user, use_sudo,
         ask_ssh_pass, config_file, report_file):
     """Run a list of tasks on using a pool of servers."""
