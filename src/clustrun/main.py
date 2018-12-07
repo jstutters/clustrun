@@ -123,6 +123,8 @@ def run(
 
     wait_for_workers(workers)
 
+    print("All workers done, making report...")
+
     report = make_report(config, start_time, results)
     if report_file:
         json.dump(report, report_file)

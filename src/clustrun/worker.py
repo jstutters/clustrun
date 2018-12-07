@@ -92,3 +92,4 @@ def launch_workers(config, q, rq):
 def wait_for_workers(processes):
     for p in processes:
         p.join()
+        print("Joined", p)
