@@ -121,7 +121,7 @@ def run(
 
     workers = launch_workers(config, q, results)
 
-    wait_for_workers(workers)
+    results = wait_for_workers(workers)
 
     print("All workers done, making report...")
 

@@ -1,5 +1,6 @@
 from datetime import datetime
 from multiprocessing import Process
+from queue import Empty
 
 import click
 from fabric import Connection
@@ -89,7 +90,15 @@ def launch_workers(config, q, rq):
     return workers
 
 
-def wait_for_workers(processes):
-    for p in processes:
-        p.join()
-        print("Joined", p)
+def wait_for_workers(processes, results_queue):
+    results = []
+    while processes:
+        while True:
+            try:
+                results.append(results_queue.get(block=False))
+            except Empty:
+                break
+        for p in processes:
+            p.join(0.1)
+        processes = [p for p in processes if not p.is_alive()]
+    return results

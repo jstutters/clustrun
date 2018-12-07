@@ -1,9 +1,7 @@
 from datetime import datetime, timedelta
-from queue import Empty
 
 
 def make_report(config, start_time, results):
-    results = _queue_to_list(results)
     return {
         "config": config.to_dict(),
         "results": [r.to_dict() for r in results],
@@ -45,16 +43,6 @@ def print_report(report):
             report["summary"]["num_failures"],
         )
     )
-
-
-def _queue_to_list(queued_items):
-    items = []
-    while True:
-        try:
-            items.append(queued_items.get(block=False))
-        except Empty:
-            break
-    return items
 
 
 def _calculate_total_duration(results):
