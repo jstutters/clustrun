@@ -100,5 +100,5 @@ def wait_for_workers(processes, results_queue):
                 break
         for p in processes:
             p.join(0.1)
-        processes = [p for p in processes if not p.is_alive()]
+        processes = [p for p in processes if p.is_alive()]
     return results
