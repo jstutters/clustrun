@@ -4,7 +4,7 @@ from clustrun.hosts import Host
 
 
 def read_unified(f):
-    yaml_config = yaml.load(f)
+    yaml_config = yaml.safe_load(f)
     config = Config()
     config.hosts = [Host(**h) for h in yaml_config.get("hosts", list())]
     config.setup_cmd = yaml_config.get("setup_cmd", "")
