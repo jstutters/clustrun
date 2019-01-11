@@ -11,4 +11,6 @@ def read_unified(f):
     config.cmd_tplt = yaml_config.get("cmd_tplt", "")
     config.sudo = yaml_config.get("sudo", True)
     config.tasks = yaml_config.get("tasks", list())
+    config.ssh_user = yaml_config.get("ssh_user", "")
+    config.ask_ssh_pass = yaml_config.get("ask_ssh_pass", False)
     return config
