@@ -102,6 +102,7 @@ ENV/
 
 # Visual Studio Code project settings
 .vscode/
+clustrun.code-workspace
 
 # Temporary test data
 tmp/
@@ -111,3 +112,5 @@ pipeline.json
 
 # Test pipelines
 testing/
+test_case/
+test_env/
